@@ -1,17 +1,20 @@
 #include "CL_include"
 
-
+BUF *ptr_tampon;
 
 int main(){
 
     char cle_shm[L_MSG];
     int msqid;
-    BUF *ptr_shm;
+  
+    int my_pid;
+    my_pid = getpid();
+    printf("PID Client : %d \n", my_pid);
 
     msqid=CreationMessagerie();
     strcpy(cle_shm, connection_msg(msqid));
   
-    ptr_shm=connection_shm(cle_shm);
+    ptr_tampon=connection_shm(cle_shm);
   
 
     
@@ -26,7 +29,7 @@ int main(){
  
 
 
-    detachement_shm(ptr_shm);
+    detachement_shm(ptr_tampon);
     deconection_msg(msqid);
     
 }
@@ -50,19 +53,20 @@ key_t Creer_cle(char *nom_fichier)
 
 int CreationMessagerie()
 {
-int code_erreur;
-key_t key;
-int  msqid;
-if ((code_erreur = ( key = ftok(CleServeur,'M')) < 0) ){
-    printf("Erreur : %d ",code_erreur);
-    return CLEerr;
-}
-    
-if ((msqid = msgget(key,0666))<0){
-    printf("Erreur msqid ");
-    
-}
-return msqid;
+    int code_erreur;
+    key_t key;
+    int  msqid;
+    if ((code_erreur = ( key = ftok(CleServeur,'M')) < 0) ){
+        printf("Erreur : %d ",code_erreur);
+        return CLEerr;
+    }
+        
+    if ((msqid = msgget(key,0666))<0){
+        printf("Erreur msqid ");
+        
+    }
+    printf("Msqid : %d \n", msqid);
+    return msqid;
 }
 
 
@@ -118,21 +122,23 @@ char* connection_msg(int msqid){
 BUF* connection_shm(char* cle_shm){
     /*transformation de la cle de memoire partagé retourné par le serveur lors de la connection à la messagerie en cle de type key_t */
     key_t cle;
-    int shmid;
-    BUF *ptr_shm;
+    int CLTshmid;
+    BUF *ptr_tampon;
     
     if ((cle =ftok(cle_shm,'T'))<0){
         printf("Erreur de creation clé memoire partagée :%d \n",CLEerr);
     }
     /*Creation de la memoire partagée */
-    if ((shmid=shmget(cle, sizeof(BUF), 0600))<0){
+    if ((CLTshmid=shmget(cle, 2*sizeof(BUF), 0666))<0){
         printf("Erreur de creation memoire partagée :%d \n",errno);
     }
     /*Attachement à la memoire partagée */
-    if((ptr_shm = (BUF *) shmat (shmid, 0,0))==0){
+    if((ptr_tampon = (BUF *) shmat (CLTshmid, 0,0))==0){
         printf("Erreur d'attachement à la memoire partagée :%d \n",SHMerr);
     }
-    return ptr_shm;
+   
+    printf("Tshmid= %d  Pointeur Tampon= 0x%x\n",CLTshmid,(unsigned) ptr_tampon);
+    return ptr_tampon;
 }
 void detachement_shm(BUF* ptr_shm){
     if((shmdt(ptr_shm)<0)){
@@ -142,11 +148,11 @@ void detachement_shm(BUF* ptr_shm){
 
 void my_handler1(int n){
     printf("J'ai recu un signal1\n");
-
-    
+    printf("La valeur sur la voie 1 est : %d \n", ptr_tampon->tampon[ptr_tampon->n]);   
 } 
 
 void my_handler2(int n){
     printf("J'ai recu un signal2\n"); 
+    printf("La valeur sur la voie 2 est : %d \n", (ptr_tampon+1)->tampon[ptr_tampon->n]);  
     
 } 
