@@ -1,11 +1,26 @@
 #include "CL_include"
+#include "CL_2.h"
 
 BUF *ptr_tampon;
+SEMAPHORE sem1;
+SEMAPHORE sem2;
+int semid;
+
 
 int main(){
 
     char cle_shm[L_MSG];
     int msqid;
+    int i;
+    key_t cle1;
+    key_t cle2;
+
+    int pid_p;
+    int pid_1 = -1;
+    int pid_2 = -1;
+    int no;
+    int pid_redac2;
+    int pid_redac1;
   
     int my_pid;
     my_pid = getpid();
@@ -17,18 +32,89 @@ int main(){
     ptr_tampon=connection_shm(cle_shm);
   
 
-    
+    signal(SIGUSR1, my_handler1);
+    signal(SIGUSR2, my_handler2);
     
 
-    for(int i =0;i<5;i++){
-            signal(SIGUSR1, my_handler1);
-            signal(SIGUSR2, my_handler2);
-            pause();
+
+    /* Code execute par le Pere */
+    pid_p = getpid();
+
+    /* On genere une cle */
+    cle1 = Creer_cle("CL_2.c");
+
+    /* On genere une deuxième cle */
+    cle2 = Creer_cle("CL_1.c");
+
+    /* On cree un semaphore initialise a 0 */
+    sem1=Creer_sem(cle1);
+    
+    sem2=Creer_sem(cle2);
+
+    //Connexion au sémaphore du serveur
+    semid=CreationMutex();
+
+
+    /* Creation du premier fils */
+
+    pid_1 = fork();
+
+    if (pid_1 > 0) /* Code execute par le Pere */ 
+    {
+        printf("Pere : \tmoi=%d\tfils1=%d\tfils2=%d\n", pid_p, pid_1, pid_2);
+
+
+        /* Creation du deuxieme fils */
+        pid_2 = fork();
+        if (pid_2 > 0) /* Code execute par le Pere */ 
+        {   
+            for(i=0;i<10;i++)
+            {
+                printf("Pere : \tmoi=%d\tfils1=%d\tfils2=%d\n", pid_p, pid_1, pid_2);
+                pause();
+            }
+        } 
+        else /* Code du 2eme fils */ 
+        {
+            my_pid = getpid();
+            pid_redac2 = fork();
+            if (pid_redac2>0){
+                //Code Rédacteur 2
+
+            }
+            while(1)
+            {
+                P(sem1);
+                printf("J'ai recu un signal1\n");
+                Ps(semid,0);
+                printf("La valeur sur la voie 1 est : %d \n", ptr_tampon->tampon[ptr_tampon->n]); 
+                Vs(semid,0);
+            }
+
+        }
+    } 
+    else/* Code du 1er fils */ 
+    {
+        my_pid = getpid();
+        pid_redac2 = fork();
+        if (pid_redac2>0){
+                //Code Rédacteur 2
+
+            }
+        while(1)
+        {
+            P(sem2);
+            printf("J'ai recu un signal2\n");
+            Ps(semid,1);
+            printf("La valeur sur la voie 2 est : %d \n", (ptr_tampon+1)->tampon[(ptr_tampon+1)->n]);
+            Vs(semid,1);
             
+        }
     }
- 
-
-
+    kill(pid_1, SIGKILL);
+    kill(pid_2, SIGKILL);
+    Detruire_sem(sem1);
+    Detruire_sem(sem2);
     detachement_shm(ptr_tampon);
     deconection_msg(msqid);
     
@@ -147,12 +233,133 @@ void detachement_shm(BUF* ptr_shm){
 }
 
 void my_handler1(int n){
-    printf("J'ai recu un signal1\n");
-    printf("La valeur sur la voie 1 est : %d \n", ptr_tampon->tampon[ptr_tampon->n]);   
+    V(sem1);
 } 
 
 void my_handler2(int n){
-    printf("J'ai recu un signal2\n"); 
-    printf("La valeur sur la voie 2 est : %d \n", (ptr_tampon+1)->tampon[ptr_tampon->n]);  
+    V(sem2); 
     
 } 
+
+ SEMAPHORE Creer_sem(key_t key)
+{
+  SEMAPHORE sem;
+  int r;
+  int nombre_de_sem=1;
+  int val_init=0;
+  sem = semget(key, nombre_de_sem,IPC_CREAT|IPC_EXCL|0666);
+  if (sem < 0)
+    {
+      perror("Creer_sem : semget");
+      exit(EXIT_FAILURE);
+    }
+  r = semctl(sem,nombre_de_sem-1,SETVAL,val_init);
+  if (r <0)
+    {
+      perror("Creer_sem : semctl");
+      exit(EXIT_FAILURE);
+    }
+  return sem;
+}
+
+void Detruire_sem(SEMAPHORE sem)
+{
+    int nombre_de_sem=1;
+    if (semctl(sem,nombre_de_sem-1,IPC_RMID,0) != 0)
+      {
+	perror("Detruire_sem");
+	exit(EXIT_FAILURE);
+      }
+
+}
+void Changer_sem(SEMAPHORE sem, int val)
+{
+  struct sembuf sb[1];
+  int nombre_de_sem=1;
+
+  sb[0].sem_num = nombre_de_sem-1;
+  sb[0].sem_op = val;
+  sb[0].sem_flg=0;
+
+  if (semop(sem,sb,nombre_de_sem) != 0)
+    {
+	perror("Changer_sem");
+	exit(EXIT_FAILURE);
+    }
+}
+
+void P(SEMAPHORE sem)
+{
+  Changer_sem(sem,-1);
+}
+
+/* **************************************** */
+/* **************************************** */
+void V(SEMAPHORE sem)
+{
+  Changer_sem(sem,1);
+}
+
+
+int CreationMutex()
+{
+  key_t key;
+  int  semid;
+  if (( key = ftok(CleServeur,'S')) < 0 )
+    return CLEerr;
+  semid = semget(key, NVOIES, 0666);
+  return semid;
+}
+
+
+/*********************	DESTRUCTION DU MUTEX
+ *  ENTREE: semid = identificateur de la famille de semaphores
+ *  SORTIE: neant
+ *  RETOUR: code erreur -1  ou 0
+ */
+int DestructionMutex(int semid)
+{
+  return (semctl(semid, 0, IPC_RMID, 0));
+}
+
+/*********************	Op�ration P
+ *  ENTREE: semid = identificateur de la famille de semaphores
+ *  SORTIE: neant
+ *  RETOUR: 0 ou SEMerr
+ */
+int Ps(int semid, int voie)
+{
+  struct sembuf semoper;
+  semoper.sem_num = voie;
+  semoper.sem_op = -1;
+  semoper.sem_flg = 0;
+  
+  if (semop(semid, &semoper, 1) < 0)
+    {
+      perror("Erreur P sur le Mutex");
+      return SEMerr;
+    }
+  
+  return 0;
+}
+
+/*********************	Op�ration V
+ *  ENTREE: semid = identificateur de la famille de semaphores
+ *  SORTIE: neant
+ *  RETOUR: 0 ou SEMerr
+ */
+int Vs(int semid, int voie)
+{
+  struct sembuf semoper;
+  semoper.sem_num = voie;
+  semoper.sem_op = 1;
+  semoper.sem_flg = 0;
+  
+  if (semop(semid, &semoper, 1) < 0)
+    {
+      perror("Erreur V sur le Mutex");
+      return SEMerr;
+    }
+  
+  return 0;
+}
