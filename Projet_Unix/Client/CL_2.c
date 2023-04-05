@@ -18,10 +18,20 @@ int main(){
     int pid_p;
     int pid_1 = -1;
     int pid_2 = -1;
-    int no;
+    //int no;
     int pid_redac2;
     int pid_redac1;
-  
+    
+
+    int pfd1[2];
+    int pfd2[2];
+
+    int val1;
+    int val2;
+    
+    int read1=0;
+    int read2=0;
+
     int my_pid;
     my_pid = getpid();
     printf("PID Client : %d \n", my_pid);
@@ -55,6 +65,15 @@ int main(){
     semid=CreationMutex();
 
 
+
+    //Création du pipe1
+    if (pipe(pfd1)==-1)
+        printf("Erreur Pipe 1 \n");
+            
+    //Création du pipe2
+    if (pipe(pfd2)==-1)
+        printf("Erreur Pipe 2\n");
+            
     /* Creation du premier fils */
 
     pid_1 = fork();
@@ -68,49 +87,82 @@ int main(){
         pid_2 = fork();
         if (pid_2 > 0) /* Code execute par le Pere */ 
         {   
+            pid_redac1 = fork(); // Creation Redacteur 1
+
+            if (pid_redac1>0)
+            {   // Code Pere 
+                pid_redac2 = fork(); // Creation Redacteur 2
+                if (pid_redac2>0){
+
+                }
+                else {
+                    //Code Rédacteur 2
+
+                    close(pfd2[1]);
+                    while(1)
+                    {
+                        read(pfd2[0],&read2,sizeof(read2));
+                        printf("Rédacteur 2 a reçu: %d \n", read2);
+                    }
+
+                }
+                
+            }        
+            else {
+                //Code Rédacteur 1
+
+                close(pfd1[1]);
+                while(1)
+                {
+                    read(pfd1[0],&read1,sizeof(read1));
+                    printf("Rédacteur 1 a reçu: %d \n", read1);
+                }
+            } 
+
             for(i=0;i<10;i++)
             {
-                printf("Pere : \tmoi=%d\tfils1=%d\tfils2=%d\n", pid_p, pid_1, pid_2);
-                pause();
+                    //printf("Pere : \tmoi=%d\tfils1=%d\tfils2=%d\n", pid_p, pid_1, pid_2);
+                    pause();
             }
-        } 
-        else /* Code du 2eme fils */ 
+        }    
+        else /* Code du 1er fils */ 
         {
             my_pid = getpid();
-            pid_redac2 = fork();
-            if (pid_redac2>0){
-                //Code Rédacteur 2
-
-            }
+            
+            /* Code du 1er fils */ 
             while(1)
             {
                 P(sem1);
-                printf("J'ai recu un signal1\n");
+                printf("J'ai recu un signal1 \n");
                 Ps(semid,0);
-                printf("La valeur sur la voie 1 est : %d \n", ptr_tampon->tampon[ptr_tampon->n]); 
+                val1 = ptr_tampon->tampon[ptr_tampon->n];
+                printf("La valeur sur la voie 1 est : %d d'après le Lecteur 1 \n", val1);
                 Vs(semid,0);
+                write(pfd1[1], &val1,sizeof(val1));
             }
 
         }
     } 
-    else/* Code du 1er fils */ 
+    else /* Code du 2eme fils */ 
     {
         my_pid = getpid();
-        pid_redac2 = fork();
-        if (pid_redac2>0){
-                //Code Rédacteur 2
-
-            }
+        
+        /* Code du 2eme fils */ 
         while(1)
         {
             P(sem2);
             printf("J'ai recu un signal2\n");
             Ps(semid,1);
-            printf("La valeur sur la voie 2 est : %d \n", (ptr_tampon+1)->tampon[(ptr_tampon+1)->n]);
+            val2 = (ptr_tampon+1)->tampon[(ptr_tampon+1)->n];
+            printf("La valeur sur la voie 2 est : %d d'après le Lecteur 2 \n", val2);
             Vs(semid,1);
+            write(pfd2[1], &val2,sizeof(val2));
+
             
         }
     }
+    kill(pid_redac1, SIGKILL);
+    kill(pid_redac2, SIGKILL);
     kill(pid_1, SIGKILL);
     kill(pid_2, SIGKILL);
     Detruire_sem(sem1);
