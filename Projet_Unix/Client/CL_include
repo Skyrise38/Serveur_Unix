@@ -23,6 +23,7 @@
 #include "sem.c"
 #include "messagerie.c"
 #include "memoire_partagee.c"
+#include "lecteurs.c"
 
 
 

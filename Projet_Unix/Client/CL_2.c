@@ -9,7 +9,7 @@
 BUF *ptr_tampon;
 SEMAPHORE sem1;
 SEMAPHORE sem2;
-int semid;
+
 
 
 int main(){
@@ -24,20 +24,18 @@ int main(){
     int pid_1 = -1;
     int pid_2 = -1;
 
+
+    int semid;
+    int pfd1[2];
+    int pfd2[2];
+    
     int pid_redac2;
     int pid_redac1;
     
-    int pfd1[2];
-    int pfd2[2];
-
-    int val1;
-    int val2;
     
     char read1[128];
     char read2[128];
 
-    char str_lecteur1[128];
-    char str_lecteur2[128];
 
 
     int my_pid;
@@ -152,24 +150,7 @@ int main(){
             
             while(1)
             {
-                P(sem1);
-                printf("J'ai recu un signal1 \n");
-                Ps(semid,0);
-                val1 = ptr_tampon->tampon[ptr_tampon->n];
-                sprintf(str_lecteur1, "%d le ", ptr_tampon->tampon[ptr_tampon->n]);
-
-
-                time_t temps_actuel;
-                struct tm *heure_locale;
-                
-                char chaine[128];
-                temps_actuel = time(NULL);
-                heure_locale = localtime(&temps_actuel);
-
-                strftime(chaine, 128, "%A %d %B %Y %H:%M:%S\n", heure_locale);
-                strcat(str_lecteur1, chaine);
-                Vs(semid,0);
-                write(pfd1[1], str_lecteur1,sizeof(str_lecteur1)+1);
+              lecteur_1(sem1, semid,ptr_tampon, pfd1 );
             }
 
         }
@@ -177,28 +158,10 @@ int main(){
     else /* Code du lecteur 2 */ 
     {
         my_pid = getpid();
-        
+
         while(1)
         {
-            P(sem2);
-            printf("J'ai recu un signal2\n");
-            Ps(semid,1);
-            val2 = (ptr_tampon+1)->tampon[(ptr_tampon+1)->n];
-            sprintf(str_lecteur2, "%d le ", (ptr_tampon+1)->tampon[(ptr_tampon+1)->n]);
-
-            /*  Récuperation de la date et stockage dans str_lecteur*/
-            time_t temps_actuel;
-            struct tm *heure_locale;
-            char chaine[128];
-            temps_actuel = time(NULL);
-            heure_locale = localtime(&temps_actuel);
-            strftime(chaine, 128, "%A %d %B %Y %H:%M:%S\n", heure_locale);
-            strcat(str_lecteur2, chaine);
-
-            Vs(semid,1);
-            write(pfd2[1], str_lecteur2,sizeof(str_lecteur2)+1);/*Envoie dans le pipe*/
-
-            
+          lecteur_2(sem2, semid, ptr_tampon, pfd2 );
         }
     }
     kill(pid_redac1, SIGKILL);
