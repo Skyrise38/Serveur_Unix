@@ -3,14 +3,9 @@
 #include "CL_include"
 #include "CL_2.h"
 
-
-
-
 BUF *ptr_tampon;
 SEMAPHORE sem1;
 SEMAPHORE sem2;
-
-
 
 int main(){
 
@@ -42,11 +37,9 @@ int main(){
   
     ptr_tampon=connection_shm(cle_shm);
   
-
     signal(SIGUSR1, my_handler1);
     signal(SIGUSR2, my_handler2);
     
-
     /* Code execute par le Pere */
     pid_p = getpid();
 
@@ -64,8 +57,6 @@ int main(){
     /*Connexion au sémaphore du serveur*/
     semid=CreationMutex();
 
-
-
     /* Création du pipe entre lecteur 1 et rédacteur 1 */
     if (pipe(pfd1)==-1)
         printf("Erreur Pipe 1 \n");
@@ -75,14 +66,11 @@ int main(){
         printf("Erreur Pipe 2\n");
             
     /* Creation du lecteur 1 */
-
     pid_1 = fork();
 
     if (pid_1 > 0) /* Code execute par le Moniteur  */ 
     {
         //printf("Moniteur " : \tmoi=%d\tfils1=%d\tfils2=%d\n", pid_p, pid_1, pid_2);
-
-
         /* Creation du lecteur 2 */
         pid_2 = fork();
         if (pid_2 > 0) /* Code execute par le Moniteur */ 
@@ -105,7 +93,6 @@ int main(){
                     }
 
                 }
-                
             }        
             else {
                 /*Code Rédacteur 1*/
@@ -116,7 +103,6 @@ int main(){
                     redacteur_1(pfd1);
                 }
             } 
-
             for(i=0;i<30;i++)
             {
                     /*printf("Pere : \tmoi=%d\tfils1=%d\tfils2=%d\n", pid_p, pid_1, pid_2);*/
@@ -151,15 +137,8 @@ int main(){
     Detruire_sem(sem2);
     detachement_shm(ptr_tampon);
     deconection_msg(msqid);
-    
 }
-
-
-
 /* ---------------- Fonctions d'interruptions ----------------*/
-
-
-
 void my_handler1(int n){
     V(sem1);
 } 
