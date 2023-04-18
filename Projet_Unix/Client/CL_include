@@ -18,4 +18,11 @@
 #include <sys/msg.h>
 #include <sys/sem.h>
 
+#include "CL_def.h"
+
+#include "sem.c"
+#include "messagerie.c"
+#include "memoire_partagee.c"
+
+
 

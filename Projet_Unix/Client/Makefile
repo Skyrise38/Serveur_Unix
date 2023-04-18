@@ -20,6 +20,7 @@ $(TARGET): $(OBJS)
 %.o: %.c %.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
+
 # Règle de nettoyage
 clean:
 	rm -f $(OBJS) $(TARGET)
