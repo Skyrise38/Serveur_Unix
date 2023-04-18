@@ -74,31 +74,31 @@ int main(){
 
 
 
-    /*Création du pipe1*/
+    /* Création du pipe entre lecteur 1 et rédacteur 1 */
     if (pipe(pfd1)==-1)
         printf("Erreur Pipe 1 \n");
             
-    /*Création du pipe2*/
+    /*Création du pipe entre lecteur 2 et rédacteur 2*/
     if (pipe(pfd2)==-1)
         printf("Erreur Pipe 2\n");
             
-    /* Creation du premier fils */
+    /* Creation du lecteur 1 */
 
     pid_1 = fork();
 
-    if (pid_1 > 0) /* Code execute par le Pere */ 
+    if (pid_1 > 0) /* Code execute par le Moniteur  */ 
     {
-        printf("Pere : \tmoi=%d\tfils1=%d\tfils2=%d\n", pid_p, pid_1, pid_2);
+        //printf("Moniteur " : \tmoi=%d\tfils1=%d\tfils2=%d\n", pid_p, pid_1, pid_2);
 
 
-        /* Creation du deuxieme fils */
+        /* Creation du lecteur 2 */
         pid_2 = fork();
-        if (pid_2 > 0) /* Code execute par le Pere */ 
+        if (pid_2 > 0) /* Code execute par le Moniteur */ 
         {   
-            pid_redac1 = fork(); /* Creation Redacteur 1*/
+            pid_redac1 = fork(); /* Creation Redacteur 1 */
 
             if (pid_redac1>0)
-            {   /* Code Pere*/ 
+            {   /* Code Moniteur */ 
                 pid_redac2 = fork(); /* Creation Redacteur 2*/
                 if (pid_redac2>0){
 
@@ -146,11 +146,10 @@ int main(){
                     pause();
             }
         }    
-        else /* Code du 1er fils */ 
+        else /* Code du lecteur 1 */ 
         {
             my_pid = getpid();
             
-            /* Code du 1er fils */ 
             while(1)
             {
                 P(sem1);
@@ -175,11 +174,10 @@ int main(){
 
         }
     } 
-    else /* Code du 2eme fils */ 
+    else /* Code du lecteur 2 */ 
     {
         my_pid = getpid();
         
-        /* Code du 2eme fils */ 
         while(1)
         {
             P(sem2);
