@@ -18,21 +18,25 @@ int main(){
     int pid_p;
     int pid_1 = -1;
     int pid_2 = -1;
-    //int no;
+
     int pid_redac2;
     int pid_redac1;
     
-
     int pfd1[2];
     int pfd2[2];
 
     int val1;
     int val2;
     
-    int read1=0;
-    int read2=0;
+    char read1[128];
+    char read2[128];
+
+    char str_lecteur1[128];
+    char str_lecteur2[128];
+
 
     int my_pid;
+
     my_pid = getpid();
     printf("PID Client : %d \n", my_pid);
 
@@ -45,7 +49,6 @@ int main(){
     signal(SIGUSR1, my_handler1);
     signal(SIGUSR2, my_handler2);
     
-
 
     /* Code execute par le Pere */
     pid_p = getpid();
@@ -61,16 +64,16 @@ int main(){
     
     sem2=Creer_sem(cle2);
 
-    //Connexion au sémaphore du serveur
+    /*Connexion au sémaphore du serveur*/
     semid=CreationMutex();
 
 
 
-    //Création du pipe1
+    /*Création du pipe1*/
     if (pipe(pfd1)==-1)
         printf("Erreur Pipe 1 \n");
             
-    //Création du pipe2
+    /*Création du pipe2*/
     if (pipe(pfd2)==-1)
         printf("Erreur Pipe 2\n");
             
@@ -87,41 +90,54 @@ int main(){
         pid_2 = fork();
         if (pid_2 > 0) /* Code execute par le Pere */ 
         {   
-            pid_redac1 = fork(); // Creation Redacteur 1
+            pid_redac1 = fork(); /* Creation Redacteur 1*/
 
             if (pid_redac1>0)
-            {   // Code Pere 
-                pid_redac2 = fork(); // Creation Redacteur 2
+            {   /* Code Pere*/ 
+                pid_redac2 = fork(); /* Creation Redacteur 2*/
                 if (pid_redac2>0){
 
                 }
                 else {
-                    //Code Rédacteur 2
+                    /*Code Rédacteur 2*/
 
                     close(pfd2[1]);
                     while(1)
-                    {
-                        read(pfd2[0],&read2,sizeof(read2));
-                        printf("Rédacteur 2 a reçu: %d \n", read2);
+                    {   
+                        char str_redacteur2[700]= {};
+                        int i;
+                        for (i = 0; i < 5; ++i){
+
+                            read(pfd2[0],read2,sizeof(read2)+1);
+                            strcat(str_redacteur2,read2);
+                        }
+                        printf("str_lecteur2 :\n%s", str_redacteur2);
                     }
 
                 }
                 
             }        
             else {
-                //Code Rédacteur 1
+                /*Code Rédacteur 1*/
 
                 close(pfd1[1]);
                 while(1)
-                {
-                    read(pfd1[0],&read1,sizeof(read1));
-                    printf("Rédacteur 1 a reçu: %d \n", read1);
+                {   
+                    char str_redacteur1[700]= {};
+                    int i;
+                    for (i = 0; i < 5; ++i)
+                    {
+                        read(pfd1[0],read1,sizeof(read1)+1);
+                        strcat(str_redacteur1,read1);
+        
+                    }
+                    printf("str_lecteur1 :\n%s", str_redacteur1);
                 }
             } 
 
-            for(i=0;i<10;i++)
+            for(i=0;i<30;i++)
             {
-                    //printf("Pere : \tmoi=%d\tfils1=%d\tfils2=%d\n", pid_p, pid_1, pid_2);
+                    /*printf("Pere : \tmoi=%d\tfils1=%d\tfils2=%d\n", pid_p, pid_1, pid_2);*/
                     pause();
             }
         }    
@@ -136,9 +152,20 @@ int main(){
                 printf("J'ai recu un signal1 \n");
                 Ps(semid,0);
                 val1 = ptr_tampon->tampon[ptr_tampon->n];
-                printf("La valeur sur la voie 1 est : %d d'après le Lecteur 1 \n", val1);
+                sprintf(str_lecteur1, "%d le ", ptr_tampon->tampon[ptr_tampon->n]);
+
+
+                time_t temps_actuel;
+                struct tm *heure_locale;
+                
+                char chaine[128];
+                temps_actuel = time(NULL);
+                heure_locale = localtime(&temps_actuel);
+
+                strftime(chaine, 128, "%A %d %B %Y %H:%M:%S\n", heure_locale);
+                strcat(str_lecteur1, chaine);
                 Vs(semid,0);
-                write(pfd1[1], &val1,sizeof(val1));
+                write(pfd1[1], str_lecteur1,sizeof(str_lecteur1)+1);
             }
 
         }
@@ -154,9 +181,19 @@ int main(){
             printf("J'ai recu un signal2\n");
             Ps(semid,1);
             val2 = (ptr_tampon+1)->tampon[(ptr_tampon+1)->n];
-            printf("La valeur sur la voie 2 est : %d d'après le Lecteur 2 \n", val2);
+            sprintf(str_lecteur2, "%d le ", (ptr_tampon+1)->tampon[(ptr_tampon+1)->n]);
+
+            /*  Récuperation de la date et stockage dans str_lecteur*/
+            time_t temps_actuel;
+            struct tm *heure_locale;
+            char chaine[128];
+            temps_actuel = time(NULL);
+            heure_locale = localtime(&temps_actuel);
+            strftime(chaine, 128, "%A %d %B %Y %H:%M:%S\n", heure_locale);
+            strcat(str_lecteur2, chaine);
+
             Vs(semid,1);
-            write(pfd2[1], &val2,sizeof(val2));
+            write(pfd2[1], str_lecteur2,sizeof(str_lecteur2)+1);/*Envoie dans le pipe*/
 
             
         }
@@ -174,8 +211,7 @@ int main(){
 
 
 
-
-//////////****************** Fonctions *****************///////////
+/* ---------------- Fonctions ----------------*/
 
 key_t Creer_cle(char *nom_fichier)
 {
