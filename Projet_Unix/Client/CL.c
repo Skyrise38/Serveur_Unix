@@ -61,10 +61,10 @@ int main(int argc, char* argv[])
     pid_p = getpid();
 
     /* On genere une cle */
-    cle1 = Creer_cle("CL.c");
+    cle1 = IPC_PRIVATE;
 
     /* On genere une deuxième cle */
-    cle2 = Creer_cle("messagerie.c");
+    cle2 = IPC_PRIVATE;
 
     /* On cree un semaphore initialise a 0 */
     sem1=Creer_sem(cle1);
