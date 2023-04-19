@@ -7,7 +7,20 @@ BUF *ptr_tampon;
 SEMAPHORE sem1;
 SEMAPHORE sem2;
 
-int main(){
+int main(int argc, char* argv[])
+{   
+    int nb_data;
+    if (argc<2)
+    {
+        nb_data = 25;
+    }
+    else
+        nb_data=atoi(argv[1]);
+        if (nb_data<=0)
+        {
+            printf("Paramètre invalide\n");
+            exit(0);
+        }
 
     char cle_shm[L_MSG];
     int msqid;
@@ -120,7 +133,7 @@ int main(){
             /* Code du Moniteur */
             if (pid_driver>0)
             {
-                for(i=0;i<30;i++)
+                for(i=0;i<=nb_data;i++)
                 {
                         /*printf("Pere : \tmoi=%d\tfils1=%d\tfils2=%d\n", pid_p, pid_1, pid_2);*/
                         pause();
