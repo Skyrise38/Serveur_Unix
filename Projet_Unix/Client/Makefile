@@ -5,9 +5,10 @@ CC = gcc
 CFLAGS = -g -Wall -ansi -D _GNU_SOURCE 
 CFLAG2 = -c -Wall -ansi -D _GNU_SOURCE 
 
+all: CL
 
 # Fichiers sources
-SRCS = CL_2.c
+SRCS = CL.c
 
 # Fichiers objets
 OBJS = $(SRCS:.c=.o)

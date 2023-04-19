@@ -1,7 +1,7 @@
 
 
 #include "CL_include"
-#include "CL_2.h"
+#include "CL.h"
 
 BUF *ptr_tampon;
 SEMAPHORE sem1;
@@ -48,10 +48,10 @@ int main(){
     pid_p = getpid();
 
     /* On genere une cle */
-    cle1 = Creer_cle("CL_2.c");
+    cle1 = Creer_cle("CL.c");
 
     /* On genere une deuxième cle */
-    cle2 = Creer_cle("CL_1.c");
+    cle2 = Creer_cle("messagerie.c");
 
     /* On cree un semaphore initialise a 0 */
     sem1=Creer_sem(cle1);

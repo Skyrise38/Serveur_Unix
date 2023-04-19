@@ -8,8 +8,6 @@ void lecteur_1(SEMAPHORE sem1, int semid, BUF *ptr_tampon, int* pfd1 )
                 Ps(semid,0);
                 val1 = ptr_tampon->tampon[ptr_tampon->n];
                 sprintf(str_lecteur1, "%d le ", ptr_tampon->tampon[ptr_tampon->n]);
-
-
                 time_t temps_actuel;
                 struct tm *heure_locale;
                 
