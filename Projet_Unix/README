@@ -1,8 +1,4 @@
-Projet client-serveur IESE4
-
-Le projet client-serveur doit comporter 2 repertoires :
-- le serveur dont le code source vous est donne
-- le client que vous devez ecrire
+Morel Raphaël Lombard Loris
 
 
 Le serveur
@@ -18,16 +14,9 @@ lance le serveur pendant 50 secondes
 
 
 Le client
+La commande make compile toute la partie client.
+On appelle CL en lui donnant le nombre de secondes CL <n> .
 
-Seuls 2 fichiers (fichiers de definitions et  d'include) sont donnes. Le reste est a ecrire.
-
-Le repertoire Exemple permet de voir le fonctionnement
-du client tel qu'il est attendu. Il comprend 2 fichiers executables
-CL et driver. 
-On appelle CL en lui donnant le nombre de secondes CL <n> (25s par defaut).
 
 ATTENTION : l'appel au serveur et au client doit se faire dans 2 terminaux differents.
 
-
-
-Frederic ROUSSEAU
