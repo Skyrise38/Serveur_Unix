@@ -8,6 +8,8 @@ void V(SEMAPHORE sem);
 
 int CreationMutex(void);
 int DestructionMutex(int);
-int Init_Mutex(int, int);
 int Ps(int, int);
 int Vs(int, int);
+
+
+

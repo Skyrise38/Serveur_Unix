@@ -72,6 +72,7 @@ int CreationMutex()
 }
 
 
+
 /*********************	DESTRUCTION DU MUTEX
  *  ENTREE: semid = identificateur de la famille de semaphores
  *  SORTIE: neant
@@ -123,3 +124,5 @@ int Vs(int semid, int voie)
   
   return 0;
 }
+
+

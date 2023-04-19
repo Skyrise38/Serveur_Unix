@@ -4,7 +4,7 @@ void lecteur_1(SEMAPHORE sem1, int semid, BUF *ptr_tampon, int* pfd1 )
 {               int val1;
                 char str_lecteur1[128];
                 P(sem1);
-                printf("J'ai recu un signal1 \n");
+                /*printf("J'ai recu un signal1 \n");*/
                 Ps(semid,0);
                 val1 = ptr_tampon->tampon[ptr_tampon->n];
                 sprintf(str_lecteur1, "%d le ", ptr_tampon->tampon[ptr_tampon->n]);
@@ -29,7 +29,7 @@ void lecteur_2(SEMAPHORE sem2, int semid, BUF *ptr_tampon, int* pfd2 )
             int val2;
             char str_lecteur2[128];
             P(sem2);
-            printf("J'ai recu un signal2\n");
+            /*printf("J'ai recu un signal2\n");*/
             Ps(semid,1);
             val2 = (ptr_tampon+1)->tampon[(ptr_tampon+1)->n];
             sprintf(str_lecteur2, "%d le ", (ptr_tampon+1)->tampon[(ptr_tampon+1)->n]);

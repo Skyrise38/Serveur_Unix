@@ -17,6 +17,7 @@
 #include <sys/shm.h>
 #include <sys/msg.h>
 #include <sys/sem.h>
+#include <pthread.h>
 
 #include "CL_def.h"
 
@@ -25,5 +26,6 @@
 #include "memoire_partagee.c"
 #include "lecteurs.c"
 #include "redacteurs.c"
+#include "driver.c"
 
 
